@@ -10,18 +10,18 @@
 
 class Superblock
 {
-protected:
-    uint32_t s_inodes_count = 0;        //文件系统所有的 Inode 数量
-    uint32_t s_blocks_count = 0;        //文件系统所有的 block 数量
-    uint32_t s_free_blocks_count = 0;   //文件系统空余可用 block 数量
-    uint32_t s_free_inodes_count = 0;   //文件系统剩余 inode 数量
-    uint32_t s_first_data_block = 0;    //superblock 的 block id
-    uint32_t s_log_block_size = 0;      //block size = 1024 << s_log_block_size;
-    uint32_t s_blocks_per_group = 0;    //每个 group 的 block 数量
-    uint32_t s_inodes_per_group = 0;    //每个 group 的 inode 数量
-    uint16_t s_inode_size = 128;        //inode 的大小 In revision 0, this value is always 128
-
-    uint64_t VFS_block_size = 0;        //文件系统中, 每个 block 的大小
+    const std::string DISK_FILE = "disk.txt";
+public:
+    uint32_t s_inodes_count = 0;        // Inode 数量
+    uint32_t s_blocks_count = 0;        // block 数量
+    uint32_t s_free_blocks_count = 0;   // 空余可用 block 数量
+    uint32_t s_free_inodes_count = 0;   // 剩余 inode 数量
+    uint32_t s_first_data_block = 0;    // superblock 的 block id
+    uint32_t s_log_block_size = 0;      // block size = 1024 << s_log_block_size;
+    uint32_t s_blocks_per_group = 0;    // 每个 group 的 block 数量
+    uint32_t s_inodes_per_group = 0;    // 每个 group 的 inode 数量
+    uint16_t s_inode_size = 128;        // inode 的大小 128 byte
+    uint64_t VFS_block_size = 0;        // 文件系统中, 每个 block 的大小
 
 public:
     int initialize(uint64_t file_system_full_size = FILE_SYSTEM_MAX_BYTE, uint32_t log_block_size = 0)
@@ -50,10 +50,10 @@ public:
     /**
      * 将 SuperBlock 信息写入模拟磁盘的二进制文件中
      */
-    int write_to_disk(std::string disk_file_path)
+    int write_to_disk()
     {
         std::fstream disk_file;
-        disk_file.open(disk_file_path, std::ios::binary | std::ios::out | std::ios::in);
+        disk_file.open(DISK_FILE, std::ios::binary | std::ios::out | std::ios::in);
         if(!disk_file.good())
         {
             std::cout << "disk_file is not exist" << std::endl;
@@ -80,10 +80,10 @@ public:
     /**
      * 从模拟磁盘的二进制文件中恢复 SuperBlock 信息
     */ 
-    int read_to_VFS(std::string disk_file_path)
+    int read_to_VFS()
     {
         std::fstream disk_file;
-        disk_file.open(disk_file_path, std::ios::binary | std::ios::in);
+        disk_file.open(DISK_FILE, std::ios::binary | std::ios::in);
         if(!disk_file.good())
         {
             std::cout << "disk_file is not exist" << std::endl;

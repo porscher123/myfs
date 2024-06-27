@@ -15,13 +15,17 @@
 
 class Inode_bitmap
 {
-protected:
+    const std::string DISK_FILE = "disk.txt";
+public:
+    // 磁盘中实验 1KB 存储inode的bitmap
+    const int static BYTE_N = 1024; 
+    const int static INODE_N = BYTE_N * 8;
     // 最多1024 * 8 个 inode
-    char bitmap_byte[1024] = {};    // 1024 * 8 bit
+    char bitmap_byte[BYTE_N] = {};    // 1024 * 8 bit
+    uint8_t bitmap[INODE_N] = {};  // 1024 * 8 bit
 
     uint32_t VFS_bg_id = 0;
     uint32_t VFS_offset_beg = 0;
-    uint8_t bitmap[1024 * 8] = {};  // 1024 * 8 ¸ö uint8
 
 public:
     Inode_bitmap()
@@ -31,32 +35,26 @@ public:
     }
 
 
-    int write_to_disk(std::string disk_file_path)
-    {
-        for(int i = 0; i < 1024; ++i)
-        {
+    int write_to_disk() {
+        for(int i = 0; i < 1024; ++i) {
             bitmap_byte[i] = 0;
-            for(int j = 0; j < 8; ++j)
-            {
-                if(bitmap[i*8 + j])
-                {
+            for(int j = 0; j < 8; ++j) {
+                if(bitmap[i * 8 + j]) {
                     bitmap_byte[i] += 0x80 >> j;
-
                 }
             }
         }
 
         std::fstream disk_file;
-        disk_file.open(disk_file_path, std::ios::binary | std::ios::out | std::ios::in);
-        if(!disk_file.good())
-        {
+        disk_file.open(DISK_FILE, std::ios::binary | std::ios::out | std::ios::in);
+
+        if(!disk_file.good()) {
             std::cout << "disk_file is not exist" << std::endl;
         }
         
         disk_file.seekp(VFS_offset_beg);
-        for(uint32_t i = 0; i < 1024; ++i)
-        {
-            disk_file.write(bitmap_byte+i, 1);
+        for(uint32_t i = 0; i < 1024; ++i) {
+            disk_file.write(bitmap_byte + i, 1);
         }
 
         disk_file.close();
@@ -101,12 +99,12 @@ public:
         return 0;
     }
 
-    uint32_t get_next_free_inode()
-    {
-        for(uint32_t i = 0; i < 1024 * 8; ++i)
-        {
-            if(bitmap[i] == 0)
-            {
+    /**
+     * 获取空闲的inode
+     */
+    uint32_t get_next_free_inode() {
+        for(uint32_t i = 0; i < 1024 * 8; ++i) {
+            if(bitmap[i] == 0) {
                 return i;
             }
         }

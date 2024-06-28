@@ -27,13 +27,13 @@ public:
     uint32_t    i_ctime = 0;       // inode 创建时间
     uint32_t    i_mtime = 0;       // inode 上一次 modified 时间
     uint32_t    i_dtime = 0;       // inode 上一次 删除时间
-    std::string i_name;            // inode 对应文件的名字
+    std::string i_name;            
     
-    uint32_t VFS_offset_beg = 0;    // Inode 的起始地址
-    uint32_t VFS_inode_id = 0;      // Inode 的 ID
-    uint32_t VFS_ingroup_id = 0;    // Inode 在 Inode Table 里面的对应位置
-    uint32_t indirect_block = 0; // 一级索引
-    std::vector<VFS_file_block> block_table;    // Inode 文件 所有对应 Block 的 Table
+    uint32_t VFS_offset_beg = 0;    
+    uint32_t VFS_inode_id = 0;      
+    uint32_t VFS_ingroup_id = 0;    
+    uint32_t indirect_block = 0; 
+    std::vector<VFS_file_block> block_table;    
     std::vector<uint16_t> children_num;
 
 // 内存中使用的数据
@@ -234,7 +234,7 @@ public:
      * 将数据的写入的 Block 中
      */
     int write(char* input, uint32_t file_offset ,uint32_t size) {
-        for(uint32_t i = 0; i < size; ++i) {
+        for (uint32_t i = 0; i < size; ++i) {
             *trans_pointer(file_offset + i) = *(input+i);
         }
         return 0;
@@ -378,23 +378,24 @@ public:
      */
     int ls_i_print() {
         std::string mode;
-        if (this->isDir()) mode += "d";
+        if (this->isDir()) mode += "d"; // directry
         else mode += "_";
-        if (this->i_mode & R) mode += "r";
+        if (this->i_mode & R) mode += "r"; // read
         else mode += "_";
-        if (this->i_mode & W) mode += "w";
+        if (this->i_mode & W) mode += "w"; // write
         else mode += "_";
-        if (this->i_mode & X) mode += "x";
+        if (this->i_mode & X) mode += "x"; // execute
         else mode += "_";
-        std::cout << std::left << std::setw(10) << mode
-                  << std::left << std::setw(10) << VFS_inode_id
-                  << std::left << std::setw(10) << block_table.size() * 1024 
-                  << std::left << std::setw(10) << i_name
-                  << std::left << std::setw(10) << block_table.size();
+        std::cout << std::left << std::setw(10) << mode // 文件模式
+                  << std::left << std::setw(10) << VFS_inode_id // inode 编号
+                  << std::left << std::setw(10) << block_table.size() * 1024 // 文件大小
+                  << std::left << std::setw(10) << i_name // 文件名
+                  << std::left << std::setw(10) << block_table.size(); // 块大小
         std::setw(10);
+        // 每个块的块号和块的起始磁盘物理地址
         std::cout << "[ ";
         for(int i = 0; i < block_table.size(); ++i) {
-            std::cout << block_table[i].get_VFS_block_id() << ", ";
+            std::cout << "(" << block_table[i].get_VFS_block_id() << "," << block_table[i].VFS_offset_beg << "), ";
         }
         std::cout << "]";
         std::cout << std::endl;

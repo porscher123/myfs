@@ -13,20 +13,18 @@
 #include <iostream>
 #include <fstream>
 
-class Inode_bitmap
-{
-    const std::string DISK_FILE = "disk.txt";
+class Inode_bitmap {
 public:
-    // 磁盘中实验 1KB 存储inode的bitmap
+    const std::string DISK_FILE = "disk.txt";
     const int static BYTE_N = 1024; 
     const int static INODE_N = BYTE_N * 8;
-    // 最多1024 * 8 个 inode
-    char bitmap_byte[BYTE_N] = {};    // 1024 * 8 bit
-    uint8_t bitmap[INODE_N] = {};  // 1024 * 8 bit
-
+public:
+    char bitmap_byte[BYTE_N] = {};  
+    uint8_t bitmap[INODE_N] = {}; 
     uint32_t VFS_bg_id = 0;
     uint32_t VFS_offset_beg = 0;
-
+    // 最多1024 * 8 个 inode
+    // 磁盘中实验 1KB 存储inode的bitmap
 public:
     Inode_bitmap()
     {
@@ -34,6 +32,11 @@ public:
         VFS_offset_beg = 2048; // Block 1, Ð´ËÀ
     }
 
+
+    void resetAllBits() {
+        bitmap[INODE_N] = {};
+        bitmap_byte[BYTE_N] = {};
+    }
 
     int write_to_disk() {
         for(int i = 0; i < 1024; ++i) {
@@ -102,8 +105,10 @@ public:
     /**
      * 获取空闲的inode
      */
+
+
     uint32_t get_next_free_inode() {
-        for(uint32_t i = 0; i < 1024 * 8; ++i) {
+        for (uint32_t i = 0; i < 1024 * 8; ++i) {
             if(bitmap[i] == 0) {
                 return i;
             }

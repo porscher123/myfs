@@ -26,8 +26,16 @@ int run() {
     } else if (cmd == "cls") {
         system("cls");
     } else if (cmd == "help") {
-        std::cout << "+ ls: list file\n"
-                 << "+ exit: exit the file system\n";
+        std::cout << "+ ls: list file in current directory\n"
+                  << "+ format: format the file system\n"
+                  << "+ cd: change the current directory to a child or parent\n"
+                  << "+ mkdir: make a directory in current directory\n"
+                  << "+ touch: make a file in current directory\n"
+                  << "+ rm: remove the file/dir in current directory\n"
+                  << "+ mv: rename the file/dir in current directory\n"
+                  << "+ write: write to a file\n"
+                  << "+ read: read from a file\n"
+                  << "+ exit: exit the file system\n";
     } else if (cmd == "info") {
         vfs->info();
     } else if (cmd == "rm") { // 删除文件
@@ -49,15 +57,20 @@ int run() {
         std::cin >> filename;
         scanf("%s", buf);
         uint32_t os, sz;
-        std::cin >> os, sz;
+        std::cin >> os >> sz;
         vfs->write(filename, buf, os, sz);
+        char buf2[1024];
+        vfs->read(filename, buf2, os, sz);
+        std::string test(buf2);
+        std::cout << test << std::endl;
     } else if (cmd == "read") {
         std::cin >> filename;
         char buf[1024];
         uint32_t os, sz;
-        std::cin >> os, sz;
+        std::cin >> os >> sz;
         vfs->read(filename, buf, os, sz);
         std::string output(buf);
+        std::cout << output << std::endl;
     }
 
     else {

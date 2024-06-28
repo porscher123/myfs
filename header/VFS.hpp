@@ -29,16 +29,14 @@ public:
     Superblock          superblock;     // superblock 常驻内存
     Block_bitmap        block_bitmap;   // block_bitmap 常驻内存
     Inode_bitmap        inode_bitmap;   // inode_bitmap 常驻内存
-    std::vector<Inode>  inode_table;    // inode_table  常驻内存
-    Inode *root;
-    Inode *cur_inode;
-    uint16_t             VFS_login_uid = 0;      // 登录进文件系统的 uid
-    uint16_t             VFS_working_uid = 0;    // 文件系统工作的 uid，用于实现多用户共享
+    std::vector<Inode>  inode_table;    
+    uint16_t             VFS_working_uid = 0;   
+    uint16_t             VFS_login_uid = 0;      
 
 public:
+    Inode *cur_inode;
+    Inode *root;
     const std::string DISK_FILE = "disk.txt";
-    std::string cur_dir = "/";
-    std::string username;
 public:
     VFS()
         : superblock(Superblock()), block_bitmap(Block_bitmap()), inode_bitmap(Inode_bitmap()), inode_table(std::vector<Inode>())
@@ -64,17 +62,16 @@ public:
         std::cout << std::endl;
 
         // block_bitmap 初始化
+        block_bitmap.resetAllBits();
         block_bitmap.write_to_disk();
-        block_bitmap.print();
-        std::cout << std::endl;
 
         // inode_bitmap 初始化
+        inode_bitmap.resetAllBits();
         inode_bitmap.write_to_disk();
-        inode_bitmap.print();
-        std::cout << std::endl;
         // 将inode列表清空
         Inode inode;
         inode.clear();
+        
 
         // 加载根目录和root用户目录
         this->root = new Inode(0);
@@ -105,8 +102,7 @@ public:
         for (auto &child : root->children) {
             clearTree(child);
         }
-        root->children.clear();
-        delete root;
+        delInode(root);
     }
     /**
      * 从disk.txt中加载文件系统到内存
@@ -410,7 +406,48 @@ public:
     }
 
 
+    void delInode(Inode* rmInode) {
+        uint32_t inode_id = rmInode->VFS_inode_id;
 
+        auto &v = this->cur_inode->children_num;
+        for (int i = 0; i < v.size(); i++) {
+            if (v[i] == inode_id) {
+                v.erase(v.begin() + i);
+            }
+        }
+        
+        auto &p = this->cur_inode->children;
+        for (int i = 0; i < p.size(); i++) {
+            if (p[i] == rmInode) {
+                p.erase(p.begin() + i);
+            }
+        }
+        // 获取需要释放的 block 列表
+        std::vector<uint32_t> free_blocks = rmInode->get_delete_blocks_ids();
+
+        // 释放 block
+        for(uint32_t i = 0; i < free_blocks.size(); ++i) {
+            // 修改 block_bitmap 标记
+            block_bitmap.reset_block(free_blocks[i]);
+        }
+
+        // 释放 inode
+        inode_bitmap.reset_inode(inode_id);
+
+        // 修改 inode bitmap 标记
+        rmInode = new Inode(inode_id);
+
+        // superblock 对应记录修改
+        superblock.set_free_blocks_count(superblock.get_free_blocks_count() + free_blocks.size());
+        superblock.set_free_inode_count(superblock.get_free_inode_count() + 1);
+
+        // 将文件系统内容写会磁盘
+        block_bitmap.write_to_disk();
+        inode_bitmap.write_to_disk();
+        rmInode->write_to_disk();
+        this->cur_inode->write_to_disk();
+        superblock.write_to_disk();
+    }
 
     /**
      * 删除文件函数
@@ -461,6 +498,7 @@ public:
         block_bitmap.write_to_disk();
         inode_bitmap.write_to_disk();
         rmInode->write_to_disk();
+        this->cur_inode->write_to_disk();
         superblock.write_to_disk();
 
         std::cout << "release block count: " << free_blocks.size() << std::endl;
@@ -623,16 +661,6 @@ public:
 
 
 
-    // 显示指定文件的信息函数
-    // int ls(std::string str_name) {
-    //     // uint32_t inode_id = find(str_name);
-    //     // if(inode_id == FIND_FALSE) {
-    //     //     return 0;
-    //     // }
-    //     // inode_table[inode_id].ls_print();
-    //     return 0;
-    // }
-
 
     int ls() {
         std::cout << std::left << std::setw(10) << "mode" 
@@ -651,8 +679,6 @@ public:
      * 展示当前工作目录下的所有文件
      */
     int ls_i() {
-        // std::cout << "free inodes count: " << superblock.get_free_inode_count() << std::endl;
-        // std::cout << "free blocks count: " << superblock.get_free_blocks_count() << std::endl;
         std::cout << std::left << std::setw(10) << "mode" 
                   << std::left << std::setw(10) << "inode id" 
                   << std::left << std::setw(10) << "size"

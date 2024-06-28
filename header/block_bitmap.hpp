@@ -4,26 +4,25 @@
 #include <iostream>
 #include <fstream>
 
-class Block_bitmap
-{
+class Block_bitmap {
     const std::string DISK_FILE = "disk.txt";
 public:
-    // 8K 个block, 每个block 1K
     const static int BLOCK_N = 1024 * 8;
     const static int BYTE_N = 1024;
-private:
-    // 最大支持1024 * 8个block
-    char bitmap_byte[BYTE_N] = {};    // 1024 * 8 bit
-
+public:
+    char bitmap_byte[BYTE_N] = {};
     uint32_t VFS_bg_id = 0;
     uint32_t VFS_offset_beg = 0;
-    uint8_t bitmap[BLOCK_N] = {};  // 1024 * 8 ¸ö uint8
-
+    uint8_t bitmap[BLOCK_N] = {};  
 public:
-    Block_bitmap()
-    {
+    Block_bitmap() {
         VFS_bg_id = 0;
         VFS_offset_beg = 1024; // Block 1, Ð´ËÀ
+    }
+
+    void resetAllBits() {
+        bitmap_byte[BYTE_N] = {};
+        bitmap[BLOCK_N] = {};
     }
 
 
@@ -34,7 +33,7 @@ public:
         for (int i = 0; i < 1024; ++i) {
             bitmap_byte[i] = 0;
             for (int j = 0; j < 8; ++j) {
-                if(bitmap[i * 8 + j]) {
+                if(bitmap[i * 8 + j] == 1) {
                     // 1000 0000 
                     bitmap_byte[i] += 0x80 >> j;
                 }
